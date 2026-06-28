@@ -67,6 +67,7 @@ appsettings.*.local.json
 *.Development.json
 *.Local.json
 *.local.json
+**/Properties/launchSettings.json
 *.env
 .env
 .env.*
