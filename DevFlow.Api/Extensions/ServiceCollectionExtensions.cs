@@ -10,6 +10,9 @@ public static class ServiceCollectionExtensions
         var connectionString = config.GetConnectionString("OracleDb");
         services.AddDbContext<AppDbContext>(options => 
             options.UseOracle(connectionString));
+
+        services.AddHealthChecks();
+        services.AddDbContext<AppDbContext>();
         
         return services;
     }
