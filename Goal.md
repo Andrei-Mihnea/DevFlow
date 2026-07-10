@@ -50,7 +50,7 @@ Do NOT start with microservices.
 
 * ASP.NET Core Web API
 * EF Core
-* PostgreSQL
+* Oracle SQL
 * JWT Authentication
 
 ## Modules

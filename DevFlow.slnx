@@ -1,4 +1,6 @@
 <Solution>
-  <Project Path="Api/Api.csproj" />
-  <Project Path="Infrastructure/Infrastructure.csproj" />
+  <Project Path="DevFlow.Api\DevFlow.Api.csproj" />
+  <Project Path="DevFlow.Application\DevFlow.Application.csproj" />
+  <Project Path="DevFlow.Domain\DevFlow.Domain.csproj" />
+  <Project Path="DevFlow.Infrastructure\DevFlow.Infrastructure.csproj" />
 </Solution>
