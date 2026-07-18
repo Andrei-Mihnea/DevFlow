@@ -37,6 +37,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.CreatedAt)
             .IsRequired();
 
+        builder.Property(x => x.Role)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
         builder.HasMany(user => user.RefreshTokens)
             .WithOne()
             .HasForeignKey(x => x.UserId);

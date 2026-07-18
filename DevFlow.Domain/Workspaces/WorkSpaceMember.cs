@@ -1,3 +1,4 @@
+using Domain.Roles;
 using Domain.Users;
 
 namespace Domain.Workspaces;

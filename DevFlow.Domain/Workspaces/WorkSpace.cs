@@ -1,3 +1,5 @@
+using Domain.Roles;
+
 namespace Domain.Workspaces;
 
 public class WorkSpace

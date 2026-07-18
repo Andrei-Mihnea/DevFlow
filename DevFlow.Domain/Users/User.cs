@@ -1,3 +1,5 @@
+using Domain.Roles;
+
 namespace Domain.Users;
 
 public class User
@@ -8,6 +10,7 @@ public class User
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
     public bool IsActive { get; private set; }
+    public ApplicationRole Role { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
@@ -16,7 +19,7 @@ public class User
     
     private User (){} //EF core
 
-    public User(string email, string passwordHash, string firstName, string lastName)
+    public User(string email, string passwordHash, string firstName, string lastName, ApplicationRole role = ApplicationRole.User)
     {
         Id = Guid.NewGuid();
         Email = email;

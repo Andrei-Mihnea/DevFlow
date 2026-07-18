@@ -4,7 +4,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddDatabase(builder.Configuration);
+builder.Services.AddDatabase(builder.Configuration); //initialise database connection
+builder.Services.MediatorServices(); // register mediator services
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

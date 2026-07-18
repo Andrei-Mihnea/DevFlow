@@ -1,4 +1,4 @@
-namespace Domain;
+namespace Domain.Roles;
 
 public enum WorkSpaceRole
 {

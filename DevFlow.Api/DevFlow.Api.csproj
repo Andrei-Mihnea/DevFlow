@@ -17,10 +17,6 @@
     </ItemGroup>
     
     <ItemGroup>
-      <Folder Include="Controllers\" />
-    </ItemGroup>
-    
-    <ItemGroup>
       <ProjectReference Include="..\DevFlow.Application\DevFlow.Application.csproj" />
       <ProjectReference Include="..\DevFlow.Infrastructure\DevFlow.Infrastructure.csproj" />
     </ItemGroup>

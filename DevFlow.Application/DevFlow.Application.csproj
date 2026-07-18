@@ -11,4 +11,8 @@
       <ProjectReference Include="..\DevFlow.Domain\DevFlow.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Users\" />
+    </ItemGroup>
+
 </Project>
