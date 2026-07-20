@@ -12,8 +12,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Abstractions\Validations\" />
-      <Folder Include="Users\" />
+      <Folder Include="UseCases\Queries\" />
+      <Folder Include="UseCases\QueryHandlers\" />
     </ItemGroup>
 
 </Project>

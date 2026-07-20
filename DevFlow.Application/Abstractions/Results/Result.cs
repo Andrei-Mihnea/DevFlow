@@ -1,3 +1,5 @@
+using Application.Abstractions.Validations;
+
 namespace Application.Abstractions.Results;
 
 public class Result
@@ -22,6 +24,7 @@ public class Result<T>
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
     public Error? Error { get; }
+    public IReadOnlyList<ValidationFailure> ValidationFailures { get; }
 
     public T Value =>
         IsSuccess ? _value! : throw new InvalidOperationException("Cannot access value of an failed result");
@@ -31,14 +34,23 @@ public class Result<T>
         IsSuccess = true;
         _value = value;
         Error = null;
+        ValidationFailures = [];
     }
 
-    protected Result(Error error)
+    protected Result(Error error, IReadOnlyList<ValidationFailure>? validationFailures = null)
     {
         IsSuccess = false;
         Error = error;
+        ValidationFailures = validationFailures ?? [];
     }
 
     public static Result<T> Success(T value) => new(value);
     public static Result<T> Failure(Error error) => new(error);
+    public static Result<T> ValidationFailure(IReadOnlyList<ValidationFailure> validationFailures) =>
+        new(
+            new Error(
+                "Validation.Failed",
+                "One or more validation errors occurred.",
+                ErrorType.Validation),
+            validationFailures);
 }
