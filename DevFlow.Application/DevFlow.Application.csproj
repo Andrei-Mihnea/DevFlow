@@ -12,6 +12,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Abstractions\Messaging\" />
+      <Folder Include="Abstractions\Results\" />
+      <Folder Include="Abstractions\Validations\" />
+      <Folder Include="Messaging\" />
       <Folder Include="UseCases\Queries\" />
       <Folder Include="UseCases\QueryHandlers\" />
     </ItemGroup>

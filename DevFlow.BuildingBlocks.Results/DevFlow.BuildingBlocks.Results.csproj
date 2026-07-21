@@ -4,11 +4,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>Domain</RootNamespace>
+        <RootNamespace>DevFlow.BuildingBlocks.Results</RootNamespace>
     </PropertyGroup>
-
-    <ItemGroup>
-      <Folder Include="Workspaces\" />
-    </ItemGroup>
 
 </Project>

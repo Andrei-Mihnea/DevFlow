@@ -1,6 +1,21 @@
 <Solution>
-  <Project Path="DevFlow.Api\DevFlow.Api.csproj" />
-  <Project Path="DevFlow.Application\DevFlow.Application.csproj" />
-  <Project Path="DevFlow.Domain\DevFlow.Domain.csproj" />
-  <Project Path="DevFlow.Infrastructure\DevFlow.Infrastructure.csproj" />
+  <Folder Name="/BuildingBlocks/">
+    <Project Path="DevFlow.BuildingBlocks.Auth/DevFlow.BuildingBlocks.Auth.csproj" />
+    <Project Path="DevFlow.BuildingBlocks.Messaging/DevFlow.BuildingBlocks.Messaging.csproj" />
+    <Project Path="DevFlow.BuildingBlocks.Results\DevFlow.BuildingBlocks.Results.csproj" />
+    <Project Path="DevFlow.BuildingBlocks.Validation\DevFlow.BuildingBlocks.Validation.csproj" />
+  </Folder>
+  <Folder Name="/Services/" />
+  <Folder Name="/Services/Auth/">
+    <Project Path="DevFlow.Auth.Api/DevFlow.Auth.Api.csproj" />
+    <Project Path="DevFlow.Auth.Application/DevFlow.Auth.Application.csproj" />
+    <Project Path="DevFlow.Auth.Domain/DevFlow.Auth.Domain.csproj" />
+    <Project Path="DevFlow.Auth.Infrastructure/DevFlow.Auth.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Services/Workspaces/">
+    <Project Path="DevFlow.Workspaces.Api/DevFlow.Workspaces.Api.csproj" />
+    <Project Path="DevFlow.Workspaces.Application/DevFlow.Workspaces.Application.csproj" />
+    <Project Path="DevFlow.Workspaces.Domain/DevFlow.Workspaces.Domain.csproj" />
+    <Project Path="DevFlow.Workspaces.Infrastructure/DevFlow.Workspaces.Infrastructure.csproj" />
+  </Folder>
 </Solution>
