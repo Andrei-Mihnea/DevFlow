@@ -13,8 +13,12 @@ public class WorkSpace
     
     private readonly List<WorkSpaceMember> _members = [];
     public IReadOnlyCollection<WorkSpaceMember> Members => _members;
-    
-    private WorkSpace() { } //EF Core
+
+    private WorkSpace()
+    {
+        Name = null!;
+        Slug = null!;
+    } //EF Core
     
     public WorkSpace(string name, string slug, Guid createdByUserId)
     {
