@@ -1,7 +1,7 @@
 using DevFlow.Auth.Api.Contracts.Auth;
-using DevFlow.Auth.Api.Extensions;
 using DevFlow.Auth.Application.Register;
 using DevFlow.BuildingBlocks.Messaging;
+using DevFlow.BuildingBlocks.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevFlow.Auth.Api.Controllers;

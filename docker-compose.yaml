@@ -1,14 +1,13 @@
 ﻿services:
-  oracle-db:
+  auth-db:
     image: gvenzl/oracle-free:23-slim
-    container_name: oracle-db
+    container_name: devflow-auth-db
     ports:
-      - "1522:1521"  ## host/computer port: container port
+      - "1522:1521"
     environment:
       ORACLE_PASSWORD: UltraSecurePassword123!
-      APP_USER: devuser
-      APP_USER_PASSWORD: DevPassword123!
-      
+      APP_USER: authuser
+      APP_USER_PASSWORD: AuthPassword123
     healthcheck:
       test: [ "CMD", "healthcheck.sh" ]
       interval: 10s
@@ -17,7 +16,47 @@
       start_period: 5s
       start_interval: 5s
     volumes:
-        - oracle-data:/opt/oracle/oradata
-    
+      - auth-oracle-data:/opt/oracle/oradata
+
+  workspaces-db:
+    image: gvenzl/oracle-free:23-slim
+    container_name: devflow-workspaces-db
+    ports:
+      - "1523:1521"
+    environment:
+      ORACLE_PASSWORD: UltraSecurePassword123!
+      APP_USER: workspacesuser
+      APP_USER_PASSWORD: WorkspacesPassword123
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+      start_interval: 5s
+    volumes:
+      - workspaces-oracle-data:/opt/oracle/oradata
+
+  projects-db:
+    image: gvenzl/oracle-free:23-slim
+    container_name: devflow-projects-db
+    ports:
+      - "1524:1521"
+    environment:
+      ORACLE_PASSWORD: UltraSecurePassword123!
+      APP_USER: projectsuser
+      APP_USER_PASSWORD: ProjectsPassword123
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+      start_interval: 5s
+    volumes:
+      - projects-oracle-data:/opt/oracle/oradata
+
 volumes:
-    oracle-data:
+  auth-oracle-data:
+  workspaces-oracle-data:
+  projects-oracle-data:

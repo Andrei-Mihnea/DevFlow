@@ -4,6 +4,7 @@
     <Project Path="DevFlow.BuildingBlocks.Messaging/DevFlow.BuildingBlocks.Messaging.csproj" />
     <Project Path="DevFlow.BuildingBlocks.Results\DevFlow.BuildingBlocks.Results.csproj" />
     <Project Path="DevFlow.BuildingBlocks.Validation\DevFlow.BuildingBlocks.Validation.csproj" />
+    <Project Path="DevFlow.BuildingBlocks.Web/DevFlow.BuildingBlocks.Web.csproj" />
   </Folder>
   <Folder Name="/Services/" />
   <Folder Name="/Services/Auth/">
@@ -17,5 +18,11 @@
     <Project Path="DevFlow.Workspaces.Application/DevFlow.Workspaces.Application.csproj" />
     <Project Path="DevFlow.Workspaces.Domain/DevFlow.Workspaces.Domain.csproj" />
     <Project Path="DevFlow.Workspaces.Infrastructure/DevFlow.Workspaces.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Services/Projects/">
+    <Project Path="DevFlow.Projects.Api/DevFlow.Projects.Api.csproj" />
+    <Project Path="DevFlow.Projects.Application/DevFlow.Projects.Application.csproj" />
+    <Project Path="DevFlow.Projects.Domain/DevFlow.Projects.Domain.csproj" />
+    <Project Path="DevFlow.Projects.Infrastructure/DevFlow.Projects.Infrastructure.csproj" />
   </Folder>
 </Solution>
