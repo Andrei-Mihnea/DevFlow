@@ -8,7 +8,7 @@ public class WorkSpaceMember
     public Guid UserId { get; private set; }
     public WorkSpaceRole Role { get; private set; }
     public DateTime JoinedAt { get; private set; }
-    
+
     private WorkSpaceMember() { } // EF Core
 
     public WorkSpaceMember(Guid workspaceId, Guid userId, WorkSpaceRole role)
@@ -22,7 +22,9 @@ public class WorkSpaceMember
     public void ChangeRole(WorkSpaceRole role)
     {
         if (role == Role)
+        {
             return;
+        }
 
         Role = role;
     }

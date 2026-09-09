@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace DevFlow.BuildingBlocks.Results;
 
 public class Result
@@ -16,6 +18,10 @@ public class Result
     public static Result Failure(Error error) => new(false, error);
 }
 
+[SuppressMessage(
+    "Design",
+    "CA1000:Do not declare static members on generic types",
+    Justification = "Typed Success, Failure, and ValidationFailure factories are the intentional public Result API.")]
 public class Result<T>
 {
     private readonly T? _value;

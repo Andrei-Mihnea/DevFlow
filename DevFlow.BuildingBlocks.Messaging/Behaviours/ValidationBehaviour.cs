@@ -1,4 +1,3 @@
-using DevFlow.BuildingBlocks.Messaging;
 using DevFlow.BuildingBlocks.Results;
 using DevFlow.BuildingBlocks.Validation;
 
@@ -10,7 +9,7 @@ public class ValidationBehaviour<TRequest, TResponse>(IEnumerable<IValidator<TRe
 {
     public Task<Result<TResponse>> HandleAsync(
         TRequest request,
-        Func<Task<Result<TResponse>>> next,
+        Func<Task<Result<TResponse>>> nextHandler,
         CancellationToken cancellationToken)
     {
         var failures = validators
@@ -19,6 +18,6 @@ public class ValidationBehaviour<TRequest, TResponse>(IEnumerable<IValidator<TRe
 
         return failures.Count > 0
             ? Task.FromResult(Result<TResponse>.ValidationFailure(failures))
-            : next();
+            : nextHandler();
     }
 }

@@ -16,12 +16,12 @@ public abstract class AbstractValidator<T> : IValidator<T>
         _rules.Add(instance =>
             {
                 var value = propertySelector(instance);
-                
+
                 return predicate(value) ? null : new ValidationFailure(propertyName, errorMessage);
             }
             );
     }
-    
+
     public virtual ValidationResult Validate(T instance)
     {
         var errors = _rules
@@ -29,7 +29,7 @@ public abstract class AbstractValidator<T> : IValidator<T>
             .Where(error => error is not null)
             .Cast<ValidationFailure>()
             .ToList();
-        
+
         return errors.Count == 0 ?
             ValidationResult.Success :
             new ValidationResult(errors);

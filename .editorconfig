@@ -1,0 +1,34 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+csharp_new_line_before_open_brace = all
+
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+
+csharp_prefer_braces = true:warning
+
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+
+dotnet_diagnostic.IDE0005.severity = suggestion
+dotnet_diagnostic.IDE0055.severity = warning
+
+[*.{yml,yaml,json}]
+indent_style = space
+indent_size = 2
+
+[**/Migrations/*.cs]
+# EF Core generates migration source; do not require manual performance rewrites.
+dotnet_diagnostic.CA1861.severity = none

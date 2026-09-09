@@ -38,10 +38,10 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .IsRequired();
 
         builder.HasIndex(project => new
-            {
-                project.WorkspaceId,
-                project.Slug
-            })
+        {
+            project.WorkspaceId,
+            project.Slug
+        })
             .IsUnique();
 
         builder.HasMany(project => project.Members)

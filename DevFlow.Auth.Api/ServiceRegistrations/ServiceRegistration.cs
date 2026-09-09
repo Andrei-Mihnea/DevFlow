@@ -8,5 +8,5 @@ public static class ServiceRegistration
 {
     public static IServiceCollection AddMediatorServices(this IServiceCollection services)
         => services.AddTransient<IRequestHandler<RegisterUserCommand, RegisterUserDto>, RegisterUserCommandHandler>();
-    
+
 }

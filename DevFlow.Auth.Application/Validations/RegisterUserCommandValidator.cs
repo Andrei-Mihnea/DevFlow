@@ -31,7 +31,7 @@ public sealed class RegisterUserCommandValidator : AbstractValidator<RegisterUse
             nameof(RegisterUserCommand.ReTypedPassword),
             value => !string.IsNullOrWhiteSpace(value),
             "Password confirmation is required.");
-        
+
         RuleFor(
             request => (request.ReTypedPassword, request.Password),
             nameof(RegisterUserCommand.ReTypedPassword),

@@ -5,9 +5,9 @@
     ports:
       - "1522:1521"
     environment:
-      ORACLE_PASSWORD: UltraSecurePassword123!
+      ORACLE_PASSWORD: ${AUTH_ORACLE_PASSWORD}
       APP_USER: authuser
-      APP_USER_PASSWORD: AuthPassword123
+      APP_USER_PASSWORD: ${AUTH_DB_PASSWORD}
     healthcheck:
       test: [ "CMD", "healthcheck.sh" ]
       interval: 10s
@@ -24,9 +24,9 @@
     ports:
       - "1523:1521"
     environment:
-      ORACLE_PASSWORD: UltraSecurePassword123!
+      ORACLE_PASSWORD: ${WORKSPACES_ORACLE_PASSWORD}
       APP_USER: workspacesuser
-      APP_USER_PASSWORD: WorkspacesPassword123
+      APP_USER_PASSWORD: ${WORKSPACES_DB_PASSWORD}
     healthcheck:
       test: [ "CMD", "healthcheck.sh" ]
       interval: 10s
@@ -43,9 +43,9 @@
     ports:
       - "1524:1521"
     environment:
-      ORACLE_PASSWORD: UltraSecurePassword123!
+      ORACLE_PASSWORD: ${PROJECTS_ORACLE_PASSWORD}
       APP_USER: projectsuser
-      APP_USER_PASSWORD: ProjectsPassword123
+      APP_USER_PASSWORD: ${PROJECTS_DB_PASSWORD}
     healthcheck:
       test: [ "CMD", "healthcheck.sh" ]
       interval: 10s
@@ -55,6 +55,20 @@
       start_interval: 5s
     volumes:
       - projects-oracle-data:/opt/oracle/oradata
+
+  auth-api:
+    build:
+      context: .
+      dockerfile: DevFlow.Auth.Api/Dockerfile
+    image: devflow/auth-api:local
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__AuthDb: "User Id=authuser;Password=${AUTH_DB_PASSWORD};Data Source=auth-db:1521/FREEPDB1;"
+    ports:
+      - "8081:8080"
+    depends_on:
+     auth-db:
+       condition: service_healthy
 
 volumes:
   auth-oracle-data:
