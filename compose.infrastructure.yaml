@@ -1,7 +1,6 @@
-﻿services:
+services:
   auth-db:
     image: gvenzl/oracle-free:23-slim
-    container_name: devflow-auth-db
     ports:
       - "1522:1521"
     environment:
@@ -20,7 +19,6 @@
 
   workspaces-db:
     image: gvenzl/oracle-free:23-slim
-    container_name: devflow-workspaces-db
     ports:
       - "1523:1521"
     environment:
@@ -39,7 +37,6 @@
 
   projects-db:
     image: gvenzl/oracle-free:23-slim
-    container_name: devflow-projects-db
     ports:
       - "1524:1521"
     environment:
@@ -55,20 +52,6 @@
       start_interval: 5s
     volumes:
       - projects-oracle-data:/opt/oracle/oradata
-
-  auth-api:
-    build:
-      context: .
-      dockerfile: DevFlow.Auth.Api/Dockerfile
-    image: devflow/auth-api:local
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__AuthDb: "User Id=authuser;Password=${AUTH_DB_PASSWORD};Data Source=auth-db:1521/FREEPDB1;"
-    ports:
-      - "8081:8080"
-    depends_on:
-     auth-db:
-       condition: service_healthy
 
 volumes:
   auth-oracle-data:

@@ -1,0 +1,22 @@
+services:
+  auth-api:
+    build:
+      context: .
+      dockerfile: DevFlow.Auth.Api/Dockerfile
+    image: devflow/auth-api:local
+    environment:
+      ConnectionStrings__AuthDb: "User Id=authuser;Password=${AUTH_DB_PASSWORD};Data Source=auth-db:1521/FREEPDB1;"
+    depends_on:
+      auth-db:
+        condition: service_healthy
+
+  workspaces-api:
+    build:
+      context: .
+      dockerfile: DevFlow.Workspaces.Api/Dockerfile
+    image: devflow/workspaces-api:local
+    environment:
+      ConnectionStrings__WorkspacesDb: "User Id=workspacesuser;Password=${WORKSPACES_DB_PASSWORD};Data Source=workspaces-db:1521/FREEPDB1;"
+    depends_on:
+      workspaces-db:
+        condition: service_healthy
