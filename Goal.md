@@ -1,4 +1,4 @@
-# DevTrack - Learning-Oriented SaaS Project Roadmap
+# DevFlow - Learning-Oriented SaaS Project Roadmap
 
 ## Goal
 
@@ -15,7 +15,7 @@ The primary objective is not to create a successful product, but to learn:
 
 * ASP.NET Core Web API
 * Entity Framework Core
-* PostgreSQL
+* Oracle SQL
 * Authentication & Authorization
 * Redis
 * RabbitMQ
@@ -35,6 +35,17 @@ The current services are:
 * Authentication
 * Workspaces
 * Projects
+
+## Implemented Baseline
+
+The current development baseline includes:
+
+* Oracle database containers with one database per service.
+* Dockerfiles for Auth, Workspaces, and Projects APIs.
+* Split Docker Compose configuration for infrastructure, backend services, and development overrides.
+* Repository-wide .NET SDK pinning, formatting, analyzers, and warnings-as-errors.
+* GitHub Actions checks for formatting, Release builds, unit tests with coverage, dependency vulnerabilities, secret leaks, and the Auth API image.
+* A protected `main` branch that requires CI checks before merge.
 
 ---
 
@@ -350,19 +361,21 @@ Learn:
 
 # Phase 6 - Docker
 
-Containerize:
+Current scope:
 
 ```text
-API
-PostgreSQL
-Redis
-RabbitMQ
+Auth API
+Workspaces API
+Projects API
+Oracle databases
 ```
 
 Use:
 
 ```yaml
-docker-compose.yml
+compose.infrastructure.yaml
+compose.services.yaml
+compose.dev.yaml
 ```
 
 Learn:
@@ -380,18 +393,21 @@ GitHub Actions
 Pipeline:
 
 ```text
-Build
+Format and analyzer checks
     ↓
-Test
+Release build
     ↓
-Publish Docker Image
+Unit tests and coverage
+    ↓
+Dependency, secret, and container security scans
 ```
 
 Learn:
 
 * Automated Builds
 * Automated Testing
-* Deployment Pipelines
+* Image publishing and deployment pipelines
+* Environment-specific secrets and approvals
 
 ---
 
@@ -407,7 +423,7 @@ Test:
 Tools:
 
 * xUnit
-* FluentAssertions
+* coverlet.collector
 
 ## Integration Tests
 
