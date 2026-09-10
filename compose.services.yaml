@@ -20,3 +20,14 @@ services:
     depends_on:
       workspaces-db:
         condition: service_healthy
+
+  projects-api:
+    build:
+      context: .
+      dockerfile: DevFlow.Projects.Api/Dockerfile
+    image: devflow/projects-api:local
+    environment:
+      ConnectionStrings__WorkspacesDb: "User Id=projectsuser;Password=${WORKSPACES_DB_PASSWORD};Data Source=workspaces-db:1521/FREEPDB1;"
+    depends_on:
+      projects-db:
+        condition: service_healthy
