@@ -50,7 +50,7 @@ jobs:
           --results-directory artifacts/test-results
 
       - name: Upload test results and coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: test-results-and-coverage
           path: artifacts/test-results
@@ -102,7 +102,7 @@ jobs:
           fi
 
       - name: Upload dependency audit
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dependency-vulnerability-audit
           path: artifacts/security/dependency-vulnerabilities.json
