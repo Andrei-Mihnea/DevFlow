@@ -94,7 +94,7 @@ namespace DevFlow.Projects.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_PROJECTS_WorkspaceId_Slug",
                 table: "PROJECTS",
-                columns: new[] { "WorkspaceId", "Slug" },
+                columns: ["WorkspaceId", "Slug"],
                 unique: true);
         }
 

@@ -1,5 +1,3 @@
-using DevFlow.BuildingBlocks.Results;
-
 namespace DevFlow.BuildingBlocks.Results.Tests;
 
 public sealed class ResultTests

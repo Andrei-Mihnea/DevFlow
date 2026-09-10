@@ -77,7 +77,7 @@ jobs:
         run: |
           mkdir -p artifacts/security
 
-          dotnet package list DevFlow.slnx \
+          dotnet package list --project DevFlow.slnx  \
             --include-transitive \
             --vulnerable \
             --format json \

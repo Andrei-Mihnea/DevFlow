@@ -10,19 +10,9 @@ public class Mediator(IServiceProvider serviceProvider) : IMediator
             request.GetType(),
             typeof(TResponse));
 
-        var handler = serviceProvider.GetService(handlerType);
-        if (handler is null)
-        {
-            throw new InvalidOperationException($"Handler for {request.GetType().Name} is not registered.");
-        }
+        var handler = serviceProvider.GetService(handlerType) ?? throw new InvalidOperationException($"Handler for {request.GetType().Name} is not registered.");
 
-        var method = handlerType.GetMethod(nameof(IRequestHandler<IRequest<TResponse>, TResponse>.HandleAsync));
-
-        if (method is null)
-        {
-            throw new InvalidOperationException($"Handler for {request.GetType().Name} is invalid.");
-        }
-
+        var method = handlerType.GetMethod(nameof(IRequestHandler<,>.HandleAsync)) ?? throw new InvalidOperationException($"Handler for {request.GetType().Name} is invalid.");
         Func<Task<Result<TResponse>>> pipeline = () =>
             (Task<Result<TResponse>>)method.Invoke(handler, [request, cancellationToken])!;
 
@@ -35,13 +25,7 @@ public class Mediator(IServiceProvider serviceProvider) : IMediator
         foreach (var behavior in behaviors.Reverse())
         {
             var next = pipeline;
-            var behaviorMethod = behaviorType.GetMethod(nameof(IPipelineBehavior<IRequest<TResponse>, TResponse>.HandleAsync));
-
-            if (behaviorMethod is null)
-            {
-                throw new InvalidOperationException($"Behavior {behavior.GetType().Name} is invalid.");
-            }
-
+            var behaviorMethod = behaviorType.GetMethod(nameof(IPipelineBehavior<,>.HandleAsync)) ?? throw new InvalidOperationException($"Behavior {behavior.GetType().Name} is invalid.");
             pipeline = () =>
                 (Task<Result<TResponse>>)behaviorMethod.Invoke(behavior, [request, next, cancellationToken])!;
         }
