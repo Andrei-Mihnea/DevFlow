@@ -25,6 +25,9 @@ dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
 dotnet_diagnostic.IDE0005.severity = suggestion
 dotnet_diagnostic.IDE0055.severity = warning
 
+[tests/**/*.cs]
+dotnet_diagnostic.CA1707.severity = none
+
 [*.{yml,yaml,json}]
 indent_style = space
 indent_size = 2

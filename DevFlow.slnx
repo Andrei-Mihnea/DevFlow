@@ -25,4 +25,7 @@
     <Project Path="DevFlow.Projects.Domain/DevFlow.Projects.Domain.csproj" />
     <Project Path="DevFlow.Projects.Infrastructure/DevFlow.Projects.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DevFlow.BuildingBlocks.Results.Tests/DevFlow.BuildingBlocks.Results.Tests.csproj" />
+  </Folder>
 </Solution>
