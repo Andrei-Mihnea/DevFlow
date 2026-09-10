@@ -26,21 +26,15 @@ The primary objective is not to create a successful product, but to learn:
 
 ---
 
-# Architecture Evolution
+## Current Architecture
 
-The project should evolve through several stages:
+DevFlow is being developed as a microservices-based application. Each service has its own API, application, domain, and infrastructure projects, together with its own database container and migration history.
 
-```text
-Simple Monolith
-    ↓
-Modular Monolith
-    ↓
-Event-Driven Monolith
-    ↓
-Microservices
-```
+The current services are:
 
-Do NOT start with microservices.
+* Authentication
+* Workspaces
+* Projects
 
 ---
 
