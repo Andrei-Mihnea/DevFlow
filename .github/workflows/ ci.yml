@@ -85,8 +85,12 @@ jobs:
 
           if jq -e '
             [
-              .projects[].frameworks[]
-              | (.topLevelPackages[]?, .transitivePackages[]?)
+              (.projects // [])[]
+              | (.frameworks // [])[]
+              | (
+                  ((.topLevelPackages // [])[]),
+                  ((.transitivePackages // [])[])
+                )
               | select((.vulnerabilities // []) | length > 0)
             ]
             | length == 0
