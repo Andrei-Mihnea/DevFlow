@@ -27,7 +27,7 @@ services:
       dockerfile: DevFlow.Projects.Api/Dockerfile
     image: devflow/projects-api:local
     environment:
-      ConnectionStrings__WorkspacesDb: "User Id=projectsuser;Password=${WORKSPACES_DB_PASSWORD};Data Source=workspaces-db:1521/FREEPDB1;"
+      ConnectionStrings__ProjectsDb: "User Id=projectsuser;Password=${PROJECTS_DB_PASSWORD};Data Source=projects-db:1521/FREEPDB1;"
     depends_on:
       projects-db:
         condition: service_healthy

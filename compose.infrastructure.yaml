@@ -1,8 +1,6 @@
 services:
   auth-db:
     image: gvenzl/oracle-free:23-slim
-    ports:
-      - "1522:1521"
     environment:
       ORACLE_PASSWORD: ${AUTH_ORACLE_PASSWORD}
       APP_USER: authuser
@@ -19,8 +17,6 @@ services:
 
   workspaces-db:
     image: gvenzl/oracle-free:23-slim
-    ports:
-      - "1523:1521"
     environment:
       ORACLE_PASSWORD: ${WORKSPACES_ORACLE_PASSWORD}
       APP_USER: workspacesuser
@@ -37,8 +33,6 @@ services:
 
   projects-db:
     image: gvenzl/oracle-free:23-slim
-    ports:
-      - "1524:1521"
     environment:
       ORACLE_PASSWORD: ${PROJECTS_ORACLE_PASSWORD}
       APP_USER: projectsuser

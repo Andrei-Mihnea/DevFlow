@@ -22,3 +22,9 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "8082:8080"
+
+  projects-api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "8083:8080"
