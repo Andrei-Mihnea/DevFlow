@@ -123,27 +123,41 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  auth-api-container:
-    name: Auth API container security
+  api-container-security:
+    name: ${{ matrix.service }} API container security
     needs: quality
     runs-on: ubuntu-24.04
 
-    steps:
-      - name: Check out source
-        uses: actions/checkout@v6
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: Auth
+            dockerfile: DevFlow.Auth.Api/Dockerfile
+            image: devflow/auth-api
+          - service: Workspaces
+            dockerfile: DevFlow.Workspaces.Api/Dockerfile
+            image: devflow/workspaces-api
+          - service: Projects
+            dockerfile: DevFlow.Projects.Api/Dockerfile
+            image: devflow/projects-api
 
-      - name: Build Auth API image
-        run: >
-          docker build
-          --file DevFlow.Auth.Api/Dockerfile
-          --tag devflow/auth-api:${{ github.sha }}
-          .
+  steps:
+    - name: Check out source
+      uses: actions/checkout@v6
 
-      - name: Scan Auth API image
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: devflow/auth-api:${{ github.sha }}
-          format: table
-          exit-code: "1"
-          ignore-unfixed: true
-          severity: HIGH,CRITICAL
+    - name: Build ${{ matrix.service }} API image
+      run: >
+        docker build
+        --file ${{ matrix.dockerfile }}
+        --tag ${{ matrix.image }}:${{ github.sha }}
+        .
+
+    - name: Scan ${{ matrix.service }} API image
+      uses: aquasecurity/trivy-action@v0.36.0
+      with:
+        image-ref: ${{ matrix.image }}:${{ github.sha }}
+        format: table
+        exit-code: "1"
+        ignore-unfixed: true
+        severity: HIGH,CRITICAL
