@@ -142,22 +142,22 @@ jobs:
             dockerfile: DevFlow.Projects.Api/Dockerfile
             image: devflow/projects-api
 
-  steps:
-    - name: Check out source
-      uses: actions/checkout@v6
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
 
-    - name: Build ${{ matrix.service }} API image
-      run: >
-        docker build
-        --file ${{ matrix.dockerfile }}
-        --tag ${{ matrix.image }}:${{ github.sha }}
-        .
+      - name: Build ${{ matrix.service }} API image
+        run: >
+          docker build
+          --file ${{ matrix.dockerfile }}
+          --tag ${{ matrix.image }}:${{ github.sha }}
+          .
 
-    - name: Scan ${{ matrix.service }} API image
-      uses: aquasecurity/trivy-action@v0.36.0
-      with:
-        image-ref: ${{ matrix.image }}:${{ github.sha }}
-        format: table
-        exit-code: "1"
-        ignore-unfixed: true
-        severity: HIGH,CRITICAL
+      - name: Scan ${{ matrix.service }} API image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ matrix.image }}:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
