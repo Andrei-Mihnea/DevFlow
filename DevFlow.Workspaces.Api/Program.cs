@@ -4,7 +4,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddWorkspacesDatabase(builder.Configuration);
+builder.Services.AddPipelineBehavior();
+builder.Services.AddMediatorServices();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddValidation();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();

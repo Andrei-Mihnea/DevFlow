@@ -18,6 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\DevFlow.Workspaces.Application\DevFlow.Workspaces.Application.csproj" />
       <ProjectReference Include="..\DevFlow.Workspaces.Domain\DevFlow.Workspaces.Domain.csproj" />
     </ItemGroup>
 

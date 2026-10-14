@@ -1,6 +1,14 @@
 # DevFlow
 
-DevFlow is a learning-focused, microservice-oriented project-management backend built with ASP.NET Core, Entity Framework Core, Oracle, Docker, and GitHub Actions. It currently manages identity, workspaces, projects, memberships, and tasks.
+DevFlow aims to be a GitHub-connected development platform where teams plan work, follow pull requests and CI results, and use AI assistance for summaries and code reviews. It is also a learning project focused on building independently deployable microservices.
+
+The current implementation is an ASP.NET Core backend using Entity Framework Core, Oracle, Docker, and GitHub Actions. It supports user registration, workspace creation with owner membership, project creation, and task creation. GitHub integration, the Angular frontend, AI features, and Kubernetes deployment are planned.
+
+## Product Direction
+
+The intended workflow is to connect a GitHub repository to a project, plan tasks on a Jira-style board, link work items to branches and pull requests, and follow review, CI, and merge activity in one place. AI assistance will begin with PR summaries and later expand to evidence-backed review findings and explanations of failed CI runs.
+
+The first product milestone is a workspace connected to one repository, a task board, and task-to-PR links. AI summaries follow once that workflow works end to end. See the [roadmap](Goal.md) for delivery order and the [architecture direction](docs/architecture.md) for service boundaries and scaling requirements.
 
 ## Architecture
 
@@ -25,6 +33,8 @@ The API layer is the composition root. Application depends on Domain and shared 
 | Projects | Projects, project members, and tasks | [API](DevFlow.Projects.Api/README.md) | [Application](DevFlow.Projects.Application/README.md) | [Domain](DevFlow.Projects.Domain/README.md) | [Infrastructure](DevFlow.Projects.Infrastructure/README.md) |
 
 Each service owns its database and migrations. A service must never read or write another service's tables.
+
+These are the existing service boundaries, not a claim of completed production readiness. Services must become independently releasable and communicate through explicit contracts. The shared mediator runs inside each service; it is not an inter-service message broker. GitHub integration and AI assistance are proposed future capabilities with their own ownership boundaries.
 
 ## Shared Building Blocks
 
@@ -87,7 +97,7 @@ Use `down` to remove containers and networks while retaining named database volu
 | --- | --- | --- |
 | Auth | [Dockerfile](DevFlow.Auth.Api/Dockerfile) | `http://localhost:8081` |
 | Workspaces | [Dockerfile](DevFlow.Workspaces.Api/Dockerfile) | `http://localhost:8082` |
-| Projects | [Dockerfile](DevFlow.Projects.Api/Dockerfile) | Development port mapping still to be added. |
+| Projects | [Dockerfile](DevFlow.Projects.Api/Dockerfile) | `http://localhost:8083` |
 
 ## Database Ownership
 
@@ -109,6 +119,7 @@ Cross-service IDs are logical references, not Oracle foreign keys. Physical fore
 | Service | Endpoint | Purpose |
 | --- | --- | --- |
 | Auth | `POST /api/auth/register` | Register a user. |
+| Workspaces | `POST /api/workspaces` | Create a workspace and its owner membership. |
 | Projects | `POST /api/projects` | Create a project. |
 | Projects | `POST /api/projects/{projectId}/tasks` | Create a task in a project. |
 | All APIs | `GET /health` | Liveness endpoint. |
@@ -125,6 +136,8 @@ dotnet ef database update --project DevFlow.Workspaces.Infrastructure/DevFlow.Wo
 dotnet ef database update --project DevFlow.Projects.Infrastructure/DevFlow.Projects.Infrastructure.csproj --startup-project DevFlow.Projects.Api/DevFlow.Projects.Api.csproj --context ProjectsDbContext
 ```
 
+The APIs do not automatically apply migrations. Deployment automation will need a controlled migration step per service before scaling replicas.
+
 ## Quality and CI
 
 The repository pins the .NET SDK in [global.json](global.json) and enforces repository-wide build standards through [.editorconfig](.editorconfig) and [Directory.Build.props](Directory.Build.props).
@@ -138,7 +151,11 @@ dotnet build DevFlow.slnx --configuration Release
 dotnet test DevFlow.slnx --configuration Release --collect:"XPlat Code Coverage" --results-directory artifacts/test-results
 ```
 
-GitHub Actions runs on every branch push and on pull requests to `main`. It verifies formatting, performs a strict Release build, runs unit tests with coverage, audits NuGet dependencies, scans Git history for secrets, and builds/scans the Auth API image. The `main` branch ruleset requires these checks before merging.
+GitHub Actions runs on every branch push and on pull requests to `main`. It verifies formatting, performs a strict Release build, runs unit tests with coverage, audits NuGet dependencies, scans Git history for secrets, and builds/scans all API images. The `main` branch ruleset requires these checks before merging.
+
+Image publishing, deployment pipelines, isolated development/production environments, integration tests, and stress tests are planned. Kubernetes will be introduced after stateless operation, readiness checks, resource limits, and safe concurrent writes are established.
+
+If README generation is automated later, it must run only after a PR merges into main, inspect the merged state, and respect branch protection. It should create a documentation commit or follow-up PR only when content changes. This automation is not currently implemented.
 
 ## Development Conventions
 
@@ -152,4 +169,5 @@ GitHub Actions runs on every branch push and on pull requests to `main`. It veri
 ## Further Reading
 
 - [Database schema](docs/database-schema.md)
+- [Architecture direction](docs/architecture.md)
 - [Project roadmap](Goal.md)
