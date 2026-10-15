@@ -98,10 +98,12 @@ jobs:
             echo "No vulnerable dependencies found."
           else
             echo "Vulnerable dependencies found."
+            cat artifacts/security/dependency-vulnerabilities.json
             exit 1
           fi
 
       - name: Upload dependency audit
+        if: ${{ !cancelled() && hashFiles('artifacts/security/dependency-vulnerabilities.json') != '' }}
         uses: actions/upload-artifact@v6
         with:
           name: dependency-vulnerability-audit
