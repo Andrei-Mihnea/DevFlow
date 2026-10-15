@@ -353,6 +353,7 @@ jobs:
           port=$(docker port devflow-smoke 8080/tcp | awk -F: '{print $NF}')
           status=0
           for attempt in $(seq 1 30); do
+            echo "Checking API health (attempt $attempt/30)"
             if curl --fail --silent --show-error "http://127.0.0.1:$port/health" > /dev/null; then
               status=1
               break
