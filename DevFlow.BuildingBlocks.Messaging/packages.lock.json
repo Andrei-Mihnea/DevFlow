@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "devflow.buildingblocks.results": {
+        "type": "Project"
+      },
+      "devflow.buildingblocks.validation": {
+        "type": "Project",
+        "dependencies": {
+          "DevFlow.BuildingBlocks.Results": "[1.0.0, )"
+        }
+      }
+    }
+  }
+}

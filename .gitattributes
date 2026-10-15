@@ -1,0 +1,2 @@
+# Keep CI formatting checks consistent on Windows, Linux, and macOS.
+* text=auto eol=lf

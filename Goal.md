@@ -15,7 +15,7 @@ Implemented in the working tree:
 - User registration, workspace creation with owner membership, project creation, and task creation.
 - Custom in-process mediator, validation pipeline, result types, and HTTP result mapping.
 - Dockerfiles for all APIs and split Compose files for infrastructure, services, and development.
-- Formatting/analyzer standards and GitHub Actions for builds, unit tests with coverage, dependency audits, secret scans, and all API image scans.
+- Formatting/analyzer standards, locked NuGet dependencies, and GitHub Actions configured for three-OS builds/tests, dependency audits, secret scans, workflow/Compose validation, API image scans/SBOMs, and container liveness smoke tests. See [CI details](docs/ci.md) for verification limits.
 - Unit tests for Results and workspace creation/validation.
 
 Not implemented yet: login/token lifecycle, enforced workspace authorization, membership management, task boards, GitHub connectivity, AI features, Angular frontend, image publishing/CD, or Kubernetes deployment. Health endpoints are liveness checks, not database readiness checks.

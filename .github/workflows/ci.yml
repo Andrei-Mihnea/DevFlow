@@ -5,31 +5,90 @@ on:
     branches: [main]
   push:
     branches: "**"
+  merge_group:
   workflow_dispatch:
+  schedule:
+    # Recheck unchanged dependencies against newly published advisories.
+    - cron: "17 5 * * 1"
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' && github.ref != 'refs/heads/main' }}
+
+env:
+  CI: "true"
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
 
 jobs:
   quality:
-    name: Quality, build, and tests
-    runs-on: ubuntu-24.04
-
+    name: Quality, build, and tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    defaults:
+      run:
+        shell: pwsh
     steps:
       - name: Check out source
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v5
+      - name: Set up .NET and cache packages
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
 
-      - name: Restore dependencies
-        run: dotnet restore DevFlow.slnx
+      - name: Check solution inventory and service boundaries
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = (Get-Location).Path
+          [xml] $solution = Get-Content DevFlow.slnx -Raw
+          $projects = @($solution.SelectNodes('//Project') | ForEach-Object { $_.Path.Replace('\', '/') })
+          if ($projects.Count -eq 0 -or @($projects | Select-Object -Unique).Count -ne $projects.Count) {
+            throw 'Solution must contain unique projects.'
+          }
+          foreach ($project in $projects) {
+            if (!(Test-Path $project)) { throw "Missing project: $project" }
+            if (!(Test-Path (Join-Path (Split-Path $project) 'packages.lock.json'))) {
+              throw "Missing package lock for $project. Run dotnet restore locally."
+            }
+            [xml] $definition = Get-Content $project -Raw
+            $name = [IO.Path]::GetFileNameWithoutExtension($project)
+            foreach ($reference in $definition.SelectNodes('//ProjectReference')) {
+              $target = [IO.Path]::GetFileNameWithoutExtension($reference.Include.Replace('\', '/'))
+              if ($name -match '^DevFlow\.(Auth|Workspaces|Projects)\.(Api|Application|Domain|Infrastructure)$') {
+                $service = $Matches[1]
+                $layer = $Matches[2]
+                if ($target -match '^DevFlow\.(Auth|Workspaces|Projects)\.' -and $Matches[1] -ne $service) {
+                  throw "Cross-service project reference: $name -> $target"
+                }
+                if ($layer -eq 'Domain' -and $target -ne 'DevFlow.BuildingBlocks.Results') {
+                  throw "Domain project must remain independent: $name -> $target"
+                }
+                if ($layer -eq 'Application' -and $target -match '\.(Api|Infrastructure)$') {
+                  throw "Application cannot depend on API/infrastructure: $name -> $target"
+                }
+              }
+              if ($name.StartsWith('DevFlow.BuildingBlocks.') -and $target -match '^DevFlow\.(Auth|Workspaces|Projects)\.') {
+                throw "Building blocks cannot depend on services: $name -> $target"
+              }
+            }
+          }
+          # Legacy projects outside DevFlow.slnx are not silently included in CI.
+          "Validated $($projects.Count) solution projects and their direct dependency boundaries."
+
+      - name: Restore locked dependencies
+        run: dotnet restore DevFlow.slnx --locked-mode
 
       - name: Verify whitespace formatting
         run: dotnet format whitespace DevFlow.slnx --verify-no-changes --no-restore
@@ -38,7 +97,7 @@ jobs:
         run: dotnet format style DevFlow.slnx --verify-no-changes --no-restore --severity info
 
       - name: Build
-        run: dotnet build DevFlow.slnx --configuration Release --no-restore
+        run: dotnet build DevFlow.slnx --configuration Release --no-restore --warnaserror
 
       - name: Run unit tests with coverage
         run: >
@@ -46,90 +105,189 @@ jobs:
           --configuration Release
           --no-build
           --no-restore
+          --logger trx
           --collect:"XPlat Code Coverage"
           --results-directory artifacts/test-results
 
+      - name: Require nonempty passing suites and coverage
+        run: |
+          $ErrorActionPreference = 'Stop'
+          [xml] $solution = Get-Content DevFlow.slnx -Raw
+          $tests = @($solution.SelectNodes('//Project') | Where-Object { $_.Path.Replace('\', '/').StartsWith('tests/') })
+          $reports = @(Get-ChildItem artifacts/test-results -Recurse -Filter *.trx -File)
+          if ($tests.Count -eq 0 -or $reports.Count -ne $tests.Count) {
+            throw 'Every test project must produce a TRX report.'
+          }
+          foreach ($project in $tests) {
+            $assembly = [IO.Path]::GetFileNameWithoutExtension($project.Path.Replace('\', '/')) + '.dll'
+            $matched = @($reports | Where-Object {
+              [xml] $testDocument = Get-Content -LiteralPath $_.FullName -Raw
+              @($testDocument.SelectNodes('//*[local-name()="TestMethod"]') | Where-Object {
+                [IO.Path]::GetFileName($_.codeBase.Replace('\', '/')) -eq $assembly
+              }).Count -gt 0
+            })
+            if ($matched.Count -ne 1) { throw "Missing or duplicate test report for $assembly" }
+          }
+          foreach ($report in $reports) {
+            [xml] $trx = Get-Content -LiteralPath $report.FullName -Raw
+            $counters = $trx.SelectSingleNode('//*[local-name()="Counters"]')
+            if (!$counters -or [int]$counters.executed -eq 0 -or [int]$counters.total -ne [int]$counters.passed) {
+              throw "Every test must execute and pass: $($report.Name)"
+            }
+            $attachments = @($trx.SelectNodes('//*[local-name()="Collector" and contains(@uri,"CoverletCodeCoverage")]//*[local-name()="A"]'))
+            if ($attachments.Count -eq 0) { throw "Missing Coverlet attachment: $($report.Name)" }
+          }
+          $coverage = @(Get-ChildItem artifacts/test-results -Recurse -Filter coverage.cobertura.xml -File)
+          # VSTest may copy collector attachments into an additional In/ directory.
+          if ($coverage.Count -lt $tests.Count) { throw 'Missing Coverlet reports.' }
+          foreach ($report in $coverage) {
+            [xml] $cobertura = Get-Content -LiteralPath $report.FullName -Raw
+            if ([int]$cobertura.coverage.'lines-valid' -le 0) {
+              throw "Coverage contains no executable lines: $($report.FullName)"
+            }
+          }
+
       - name: Upload test results and coverage
-        uses: actions/upload-artifact@v6
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: test-results-and-coverage
+          name: test-results-${{ matrix.os }}-${{ github.sha }}
           path: artifacts/test-results
-          if-no-files-found: error
+          if-no-files-found: warn
+          retention-days: 14
+
+  workflow-validation:
+    name: Workflow and Compose validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install checksum-verified actionlint
+        shell: bash
+        run: |
+          destination="$RUNNER_TEMP/devflow-actionlint"
+          mkdir -p "$destination"
+          cd "$destination"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz -o actionlint.tar.gz
+          echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' | sha256sum --check --strict
+          tar -xzf actionlint.tar.gz actionlint
+          echo "$destination" >> "$GITHUB_PATH"
+
+      - name: Validate GitHub Actions workflows
+        run: actionlint
+
+      - name: Validate combined Compose files without local credentials
+        run: >
+          docker compose --env-file .env.example
+          -f compose.infrastructure.yaml -f compose.services.yaml -f compose.dev.yaml
+          config --quiet
 
   dependency-security:
     name: Dependency vulnerability audit
     runs-on: ubuntu-24.04
-
+    timeout-minutes: 15
     steps:
-      - name: Check out source
-        uses: actions/checkout@v6
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
 
-      - name: Restore dependencies
-        run: dotnet restore DevFlow.slnx
-
-      - name: Check vulnerable dependencies
+      - name: Restore locked dependencies
+        id: restore
         shell: bash
         run: |
           mkdir -p artifacts/security
+          dotnet restore DevFlow.slnx --locked-mode 2>&1 | tee artifacts/security/restore.log
 
-          dotnet package list --project DevFlow.slnx  \
-            --include-transitive \
-            --vulnerable \
-            --format json \
+      - name: Check vulnerable dependencies
+        if: ${{ !cancelled() && steps.restore.outcome != 'skipped' }}
+        shell: bash
+        run: |
+          dotnet package list --project DevFlow.slnx --no-restore \
+            --include-transitive --vulnerable --format json \
             > artifacts/security/dependency-vulnerabilities.json
+
+          jq -e '(.projects | type == "array") and (.projects | length > 0)' \
+            artifacts/security/dependency-vulnerabilities.json > /dev/null
 
           if jq -e '
             [
               (.projects // [])[]
               | (.frameworks // [])[]
-              | (
-                  ((.topLevelPackages // [])[]),
-                  ((.transitivePackages // [])[])
-                )
+              | (((.topLevelPackages // [])[]), ((.transitivePackages // [])[]))
               | select((.vulnerabilities // []) | length > 0)
-            ]
-            | length == 0
+            ] | length == 0
           ' artifacts/security/dependency-vulnerabilities.json > /dev/null; then
             echo "No vulnerable dependencies found."
           else
-            echo "Vulnerable dependencies found."
             cat artifacts/security/dependency-vulnerabilities.json
             exit 1
           fi
 
-      - name: Upload dependency audit
-        if: ${{ !cancelled() && hashFiles('artifacts/security/dependency-vulnerabilities.json') != '' }}
-        uses: actions/upload-artifact@v6
+      - name: Preserve dependency audit and restore diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dependency-vulnerability-audit
-          path: artifacts/security/dependency-vulnerabilities.json
-          if-no-files-found: error
+          path: artifacts/security/
+          if-no-files-found: warn
+          retention-days: 14
 
   secret-security:
     name: Secret scan
     runs-on: ubuntu-24.04
-
+    timeout-minutes: 15
     steps:
-      - name: Check out source and history
-        uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Scan for leaked secrets
-        uses: gitleaks/gitleaks-action@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install checksum-verified Gitleaks
+        shell: bash
+        run: |
+          destination="$RUNNER_TEMP/devflow-gitleaks"
+          mkdir -p "$destination"
+          cd "$destination"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o gitleaks.tar.gz
+          echo '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz' | sha256sum --check --strict
+          tar -xzf gitleaks.tar.gz gitleaks
+          echo "$destination" >> "$GITHUB_PATH"
+
+      - name: Scan reachable history for secrets including removed values
+        run: |
+          mkdir -p artifacts/security
+          gitleaks git . --log-opts=HEAD --redact --no-banner \
+            --report-format json --report-path artifacts/security/secrets-history.json
+
+      - name: Scan current tracked files
+        if: ${{ !cancelled() }}
+        run: |
+          gitleaks dir . --redact --no-banner \
+            --report-format json --report-path artifacts/security/secrets-current.json
+
+      - name: Preserve redacted secret reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: secret-reports
+          path: artifacts/security/
+          if-no-files-found: warn
+          retention-days: 14
 
   api-container-security:
     name: ${{ matrix.service }} API container security
-    needs: quality
     runs-on: ubuntu-24.04
-
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -137,29 +295,98 @@ jobs:
           - service: Auth
             dockerfile: DevFlow.Auth.Api/Dockerfile
             image: devflow/auth-api
+            connection: ConnectionStrings__AuthDb
           - service: Workspaces
             dockerfile: DevFlow.Workspaces.Api/Dockerfile
             image: devflow/workspaces-api
+            connection: ConnectionStrings__WorkspacesDb
           - service: Projects
             dockerfile: DevFlow.Projects.Api/Dockerfile
             image: devflow/projects-api
-
+            connection: ConnectionStrings__ProjectsDb
+    env:
+      IMAGE: ${{ matrix.image }}:${{ github.sha }}
+      DOCKERFILE: ${{ matrix.dockerfile }}
+      CONNECTION_KEY: ${{ matrix.connection }}
     steps:
-      - name: Check out source
-        uses: actions/checkout@v6
-
-      - name: Build ${{ matrix.service }} API image
-        run: >
-          docker build
-          --file ${{ matrix.dockerfile }}
-          --tag ${{ matrix.image }}:${{ github.sha }}
-          .
-
-      - name: Scan ${{ matrix.service }} API image
-        uses: aquasecurity/trivy-action@v0.36.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          image-ref: ${{ matrix.image }}:${{ github.sha }}
-          format: table
-          exit-code: "1"
-          ignore-unfixed: true
-          severity: HIGH,CRITICAL
+          persist-credentials: false
+
+      - name: Install checksum-verified Trivy
+        shell: bash
+        run: |
+          destination="$RUNNER_TEMP/devflow-trivy"
+          mkdir -p "$destination"
+          cd "$destination"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz -o trivy.tar.gz
+          echo '2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a  trivy.tar.gz' | sha256sum --check --strict
+          tar -xzf trivy.tar.gz trivy
+          echo "$destination" >> "$GITHUB_PATH"
+
+      - name: Build API image
+        run: |
+          mkdir -p artifacts/containers
+          docker build --pull --file "$DOCKERFILE" --tag "$IMAGE" .
+
+      - name: Scan API image
+        id: scan
+        run: >
+          trivy image --scanners vuln,secret --severity HIGH,CRITICAL
+          --ignore-unfixed --exit-code 1 --format json
+          --output artifacts/containers/trivy.json "$IMAGE"
+
+      - name: Generate SBOM
+        if: ${{ !cancelled() && steps.scan.outcome != 'skipped' }}
+        run: trivy image --format cyclonedx --output artifacts/containers/sbom.cdx.json "$IMAGE"
+
+      - name: Smoke test packaged API without database access
+        if: ${{ !cancelled() && steps.scan.outcome != 'skipped' }}
+        shell: bash
+        run: |
+          # This checks startup and liveness only, not Oracle readiness or migrations.
+          docker run --detach --name devflow-smoke --publish 127.0.0.1::8080 \
+            --env ASPNETCORE_ENVIRONMENT=Production \
+            --env "$CONNECTION_KEY=User Id=ci;Password=ci-placeholder;Data Source=127.0.0.1:1521/FREEPDB1;" \
+            "$IMAGE"
+          port=$(docker port devflow-smoke 8080/tcp | awk -F: '{print $NF}')
+          status=0
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error "http://127.0.0.1:$port/health" > /dev/null; then
+              status=1
+              break
+            fi
+            sleep 2
+          done
+          test "$status" -eq 1
+          uid=$(docker exec devflow-smoke id -u)
+          test "$uid" -ne 0
+
+      - name: Capture container logs and clean up
+        if: ${{ always() }}
+        run: |
+          mkdir -p artifacts/containers
+          docker logs devflow-smoke > artifacts/containers/startup.log 2>&1 || true
+          docker rm --force devflow-smoke > /dev/null 2>&1 || true
+
+      - name: Preserve container security reports and SBOM
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: container-${{ matrix.service }}-${{ github.sha }}
+          path: artifacts/containers/
+          if-no-files-found: warn
+          retention-days: 14
+
+  required:
+    name: CI / Required
+    if: ${{ always() }}
+    needs: [quality, workflow-validation, dependency-security, secret-security, api-container-security]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      RESULTS: ${{ toJSON(needs) }}
+    steps:
+      - name: Require every validation job to pass
+        run: echo "$RESULTS" | jq -e 'all(.[]; .result == "success")'

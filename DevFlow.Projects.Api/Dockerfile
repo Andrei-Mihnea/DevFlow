@@ -3,7 +3,7 @@ WORKDIR /src
 
 COPY . .
 
-RUN dotnet restore DevFlow.Projects.Api/DevFlow.Projects.Api.csproj
+RUN dotnet restore DevFlow.Projects.Api/DevFlow.Projects.Api.csproj --locked-mode
 
 RUN dotnet publish DevFlow.Projects.Api/DevFlow.Projects.Api.csproj \
     --configuration Release \
@@ -17,5 +17,7 @@ ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
 COPY --from=build /app/publish .
+
+USER $APP_UID
 
 ENTRYPOINT ["dotnet", "DevFlow.Projects.Api.dll"]

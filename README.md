@@ -140,18 +140,21 @@ The APIs do not automatically apply migrations. Deployment automation will need 
 
 ## Quality and CI
 
-The repository pins the .NET SDK in [global.json](global.json) and enforces repository-wide build standards through [.editorconfig](.editorconfig) and [Directory.Build.props](Directory.Build.props).
+The repository pins the .NET SDK in [global.json](global.json) and enforces repository-wide build standards through [.editorconfig](.editorconfig) and [Directory.Build.props](Directory.Build.props). Each solution project has a committed `packages.lock.json`; CI and Docker builds restore in locked mode. NuGet audits direct and transitive dependencies at all severity levels.
 
 Run the local quality checks before opening a pull request:
 
 ```bash
+dotnet restore DevFlow.slnx --locked-mode
 dotnet format whitespace DevFlow.slnx --verify-no-changes --no-restore
 dotnet format style DevFlow.slnx --verify-no-changes --no-restore --severity info
-dotnet build DevFlow.slnx --configuration Release
-dotnet test DevFlow.slnx --configuration Release --collect:"XPlat Code Coverage" --results-directory artifacts/test-results
+dotnet build DevFlow.slnx --configuration Release --no-restore --warnaserror
+dotnet test DevFlow.slnx --configuration Release --no-build --no-restore --logger trx --collect:"XPlat Code Coverage" --results-directory artifacts/test-results
 ```
 
-GitHub Actions runs on every branch push and on pull requests to `main`. It verifies formatting, performs a strict Release build, runs unit tests with coverage, audits NuGet dependencies, scans Git history for secrets, and builds/scans all API images. The `main` branch ruleset requires these checks before merging.
+GitHub Actions is configured for every branch push, pull requests to `main`, merge groups, manual runs, and a weekly advisory recheck. Builds and unit tests run on Linux, Windows, and macOS. Independent jobs validate workflow/Compose syntax, audit dependencies, scan secrets, and build/scan each API image. Container checks generate CycloneDX SBOMs and test non-root startup and `/health` without a database. Reports are retained even after failures.
+
+The aggregate `CI / Required` job succeeds only when every validation job succeeds. After the updated workflow has run on GitHub, configure the `main` ruleset to require this stable check instead of the previous individual job names. Workflow files do not themselves update GitHub branch protection. See [CI details](docs/ci.md) for gates, artifacts, limitations, and package-update instructions.
 
 Image publishing, deployment pipelines, isolated development/production environments, integration tests, and stress tests are planned. Kubernetes will be introduced after stateless operation, readiness checks, resource limits, and safe concurrent writes are established.
 
