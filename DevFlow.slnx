@@ -27,5 +27,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DevFlow.BuildingBlocks.Results.Tests/DevFlow.BuildingBlocks.Results.Tests.csproj" />
+    <Project Path="tests/DevFlow.Workspaces.Application.Tests/DevFlow.Workspaces.Application.Tests.csproj" />
   </Folder>
 </Solution>

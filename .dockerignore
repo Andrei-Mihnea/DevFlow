@@ -5,6 +5,7 @@
 **/bin
 **/obj
 **/node_modules
+artifacts
 
 **/appsettings.Development.json
 **/appsettings.*.local.json

@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: docker
+    directories:
+      - /DevFlow.Auth.Api
+      - /DevFlow.Workspaces.Api
+      - /DevFlow.Projects.Api
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

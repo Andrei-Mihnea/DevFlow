@@ -23,6 +23,7 @@
       <ProjectReference Include="..\DevFlow.BuildingBlocks.Messaging\DevFlow.BuildingBlocks.Messaging.csproj" />
       <ProjectReference Include="..\DevFlow.BuildingBlocks.Results\DevFlow.BuildingBlocks.Results.csproj" />
       <ProjectReference Include="..\DevFlow.BuildingBlocks.Validation\DevFlow.BuildingBlocks.Validation.csproj" />
+      <ProjectReference Include="..\DevFlow.BuildingBlocks.Web\DevFlow.BuildingBlocks.Web.csproj" />
     </ItemGroup>
 
 </Project>

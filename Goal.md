@@ -1,489 +1,95 @@
-# DevTrack - Learning-Oriented SaaS Project Roadmap
+# DevFlow Roadmap
 
-## Goal
+## Vision
 
-Build a production-style SaaS platform that helps software teams manage:
+Build a GitHub-connected development platform that brings planning, repository activity, and AI assistance into one team workspace. Teams should manage a Jira-style task board, link tasks to branches and pull requests, follow CI results, and request useful AI explanations and reviews.
 
-* Projects
-* Tasks
-* Deployments
-* Incidents
-* Notifications
-* Analytics
+DevFlow remains a learning project, with production-minded goals: secure authorization, clear data ownership, independently deployable services, measurable behavior, and eventual Kubernetes scaling.
 
-The primary objective is not to create a successful product, but to learn:
+## Current Baseline
 
-* ASP.NET Core Web API
-* Entity Framework Core
-* PostgreSQL
-* Authentication & Authorization
-* Redis
-* RabbitMQ
-* Docker
-* CI/CD
-* Monitoring
-* Microservices
+Implemented in the working tree:
 
----
+- Auth, Workspaces, and Projects APIs, each with application, domain, and infrastructure layers.
+- Separate Oracle databases and migration histories per service.
+- User registration, workspace creation with owner membership, project creation, and task creation.
+- Custom in-process mediator, validation pipeline, result types, and HTTP result mapping.
+- Dockerfiles for all APIs and split Compose files for infrastructure, services, and development.
+- Formatting/analyzer standards, locked NuGet dependencies, and GitHub Actions configured for three-OS builds/tests, dependency audits, secret scans, workflow/Compose validation, API image scans/SBOMs, and container liveness smoke tests. See [CI details](docs/ci.md) for verification limits.
+- Unit tests for Results and workspace creation/validation.
 
-## Current Architecture
+Not implemented yet: login/token lifecycle, enforced workspace authorization, membership management, task boards, GitHub connectivity, AI features, Angular frontend, image publishing/CD, or Kubernetes deployment. Health endpoints are liveness checks, not database readiness checks.
 
-DevFlow is being developed as a microservices-based application. Each service has its own API, application, domain, and infrastructure projects, together with its own database container and migration history.
+## Milestone 1 — Secure Team Foundation
 
-The current services are:
+- Complete login, refresh tokens, logout, and password hashing/security review.
+- Validate authentication tokens in APIs and derive acting user IDs from verified identity.
+- Implement workspace invitations/membership and Owner, Admin, Member, and Viewer permissions.
+- Enforce project/task access, including cross-service ownership rules.
+- Define global error handling and safe behavior for concurrent unique-key conflicts.
+- Add focused business-rule tests and API/database integration tests.
 
-* Authentication
-* Workspaces
-* Projects
+Acceptance: authenticated users can manage only the workspaces and projects they are authorized to access.
 
----
+## Milestone 2 — Task Planning and Angular Frontend
 
-# Phase 1 - Foundation
+- Add project listing, editing, and archiving.
+- Add task listing, editing, assignment, deletion, filtering, sorting, and pagination.
+- Support To Do, In Progress, Review, and Done states with defined transitions.
+- Build Angular workspace/project views and the task board.
+- Keep tasks and boards in Projects initially; split capabilities when ownership or independent operation warrants it.
 
-## Technologies
+Acceptance: a team can plan and track work through the frontend against real backend data.
 
-* ASP.NET Core Web API
-* EF Core
-* Oracle SQL
-* JWT Authentication
+## Milestone 3 — GitHub-Connected MVP
 
-## Modules
+- Introduce a GitHub integration capability; design access permissions and credential handling first.
+- Connect one repository to a project and receive verified GitHub webhooks.
+- Synchronize pull requests, reviews, commits, and workflow results.
+- Link work items to branches and PRs through explicit identifiers/conventions.
+- Display linked PR and CI activity in Angular.
+- Make webhook processing asynchronous, idempotent, and recoverable; reconcile missed events.
+- Add optional board automation for PR opening/merging with explicit team rules.
 
-### Authentication
+Acceptance: one workspace can connect one repository, link tasks to PRs, and see updates without manual duplication.
 
-Features:
+## Milestone 4 — AI Assistance
 
-* Register
-* Login
-* Refresh Token
-* Logout
+- Start with user-requested PR summaries using the diff and linked task context.
+- Add advisory code-review findings with file/line evidence and clear limitations.
+- Explain failed CI runs and suggest task breakdowns or acceptance criteria.
+- Put provider implementations behind a backend interface so models can change without changing business use cases.
+- Enforce access before retrieving repository content or invoking a model.
+- Require explicit enablement for sending private code to a provider.
+- Treat code, comments, and logs as untrusted input; model output never grants permissions or executes changes automatically.
+- Track usage, latency, costs, and model/version details; evaluate quality before expanding automation.
 
-Learn:
+Acceptance: users can request useful summaries and inspect evidence-backed suggestions while retaining control of decisions.
 
-* JWT
-* Refresh Tokens
-* Claims
-* Password Hashing
+## Milestone 5 — Independent Releases and Environments
 
-### Users
+- Publish versioned API images after required checks pass.
+- Establish isolated development and production configuration, secrets, data, and approvals.
+- Run migrations as controlled release steps per service.
+- Make services independently buildable, testable, and deployable with compatible contracts.
+- Add development-only/manual or scheduled load tests and agreed performance targets.
+- Automate README upkeep only after PR merges into main, respecting branch protection. This workflow is planned, not present.
 
-Features:
+Acceptance: a compatible change to one service can be released without redeploying all services.
 
-* View Profile
-* Update Profile
+## Milestone 6 — Observability and Kubernetes Scaling
 
-Learn:
+- Add structured logs, correlation IDs, metrics, and distributed tracing.
+- Implement readiness/liveness probes, graceful shutdown, and resource requests/limits.
+- Keep API replicas stateless and move durable background work into queues.
+- Add Kubernetes manifests or Helm charts and autoscaling based on measured workload.
+- Test retries, duplicate delivery, concurrency, and dependency outages.
+- Plan Oracle capacity, connection budgets, backups, and recovery separately from API scaling.
 
-* DTOs
-* Validation
-* AutoMapper (optional)
+Acceptance: services can scale independently with monitored behavior and tested failure handling.
 
-### Workspaces
+## Later Opportunities
 
-Features:
+Notifications, activity history, deployment insights, incidents, analytics, caching, and real-time updates can extend the core workflow. Introduce Redis, RabbitMQ, or other infrastructure when a concrete requirement justifies them.
 
-* Create Workspace
-* Join Workspace
-* List Workspace Members
-
-Learn:
-
-* One-to-Many Relationships
-* Many-to-Many Relationships
-
-### Projects
-
-Features:
-
-* Create Project
-* Update Project
-* Archive Project
-
-Learn:
-
-* Project Ownership
-* Authorization
-
-### Tasks
-
-Features:
-
-* Create Task
-* Assign Task
-* Update Status
-* Delete Task
-
-Statuses:
-
-```text
-To Do
-In Progress
-Review
-Done
-```
-
-Learn:
-
-* Pagination
-* Filtering
-* Sorting
-
----
-
-# Phase 2 - Production Readiness
-
-## Validation
-
-Use:
-
-* FluentValidation
-
-Learn:
-
-* Request Validation
-* Business Validation
-
-## Global Error Handling
-
-Implement:
-
-* Exception Middleware
-
-Learn:
-
-* ProblemDetails
-* Consistent API Responses
-
-## Logging
-
-Use:
-
-* Serilog
-
-Learn:
-
-* Structured Logging
-* Correlation IDs
-
-## Authorization
-
-Roles:
-
-```text
-Owner
-Admin
-Member
-Viewer
-```
-
-Learn:
-
-* Policy-Based Authorization
-* Custom Requirements
-
----
-
-# Phase 3 - DevOps Domain Features
-
-## Deployments
-
-Entity:
-
-```text
-Deployment
-- Id
-- Version
-- Environment
-- Status
-- CommitHash
-- CreatedAt
-```
-
-Statuses:
-
-```text
-Success
-Failed
-RolledBack
-```
-
-Learn:
-
-* Domain Modeling
-* Audit Logs
-
-## Incidents
-
-Entity:
-
-```text
-Incident
-- Id
-- Title
-- Severity
-- Status
-- RootCause
-- StartedAt
-- ResolvedAt
-```
-
-Severity:
-
-```text
-Low
-Medium
-High
-Critical
-```
-
-Status:
-
-```text
-Open
-Investigating
-Resolved
-```
-
-Learn:
-
-* State Transitions
-* Business Rules
-
-## Activity Log
-
-Track:
-
-```text
-TaskCreated
-TaskAssigned
-ProjectCreated
-DeploymentCreated
-IncidentOpened
-IncidentResolved
-```
-
-Learn:
-
-* Auditing
-* Event History
-
----
-
-# Phase 4 - Redis
-
-## Implement Caching
-
-Cache:
-
-* Dashboard Statistics
-* Project Overview
-* Recent Activity
-
-Learn:
-
-* Cache Aside Pattern
-* Expiration Policies
-* Cache Invalidation
-
-Example:
-
-```text
-Request
-    ↓
-Redis
-    ↓ (miss)
-Database
-    ↓
-Store in Redis
-```
-
----
-
-# Phase 5 - RabbitMQ
-
-## Event-Driven Architecture
-
-Publish Events:
-
-```text
-TaskAssigned
-DeploymentCreated
-DeploymentFailed
-IncidentOpened
-IncidentResolved
-```
-
-Learn:
-
-* Producers
-* Consumers
-* Exchanges
-* Routing Keys
-
-## Notifications
-
-Create:
-
-Notification Worker
-
-Consumes:
-
-```text
-TaskAssigned
-IncidentOpened
-DeploymentFailed
-```
-
-Creates:
-
-```text
-Email Notification
-In-App Notification
-```
-
-Learn:
-
-* Background Processing
-* Eventual Consistency
-
----
-
-# Phase 6 - Docker
-
-Containerize:
-
-```text
-API
-PostgreSQL
-Redis
-RabbitMQ
-```
-
-Use:
-
-```yaml
-docker-compose.yml
-```
-
-Learn:
-
-* Networking
-* Volumes
-* Environment Variables
-
----
-
-# Phase 7 - CI/CD
-
-GitHub Actions
-
-Pipeline:
-
-```text
-Build
-    ↓
-Test
-    ↓
-Publish Docker Image
-```
-
-Learn:
-
-* Automated Builds
-* Automated Testing
-* Deployment Pipelines
-
----
-
-# Phase 8 - Testing
-
-## Unit Tests
-
-Test:
-
-* Services
-* Business Logic
-
-Tools:
-
-* xUnit
-* FluentAssertions
-
-## Integration Tests
-
-Test:
-
-* API Endpoints
-* Database Interactions
-
-Learn:
-
-* TestContainers
-
----
-
-# Phase 9 - Monitoring
-
-## OpenTelemetry
-
-Learn:
-
-* Tracing
-* Metrics
-
-## Grafana
-
-Visualize:
-
-* Request Count
-* Error Rate
-* Response Times
-
----
-
-# Phase 10 - Microservices
-
-## Notification Service
-
-Responsibilities:
-
-```text
-Consume Events
-Send Notifications
-Manage Notification History
-```
-
-Own Database:
-
-```text
-NotificationDb
-```
-
-## Analytics Service
-
-Responsibilities:
-
-```text
-Generate Reports
-Dashboard Statistics
-Project Metrics
-```
-
-Own Database:
-
-```text
-AnalyticsDb
-```
-
----
-
-# Stretch Goals
-
-* SignalR Real-Time Notifications
-* API Versioning
-* Feature Flags
-* Rate Limiting
-* OAuth2 Login (Google/GitHub)
-* Kubernetes
-* Helm Charts
-* Azure Deployment
+See [architecture direction](docs/architecture.md) for the rules guiding these milestones. Milestones describe intended delivery order, not completed phases or delivery dates.

@@ -15,9 +15,12 @@
       </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.9" />
       <PackageReference Include="Oracle.EntityFrameworkCore" Version="10.23.26200" />
+      <!-- Override the Oracle driver's vulnerable transitive Pkcs 8.0.1 dependency. -->
+      <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.2" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\DevFlow.Workspaces.Application\DevFlow.Workspaces.Application.csproj" />
       <ProjectReference Include="..\DevFlow.Workspaces.Domain\DevFlow.Workspaces.Domain.csproj" />
     </ItemGroup>
 

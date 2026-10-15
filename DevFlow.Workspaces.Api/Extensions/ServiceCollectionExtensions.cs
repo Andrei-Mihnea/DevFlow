@@ -1,4 +1,6 @@
+using DevFlow.Workspaces.Application.Abstractions.Repositories;
 using DevFlow.Workspaces.Infrastructure;
+using DevFlow.Workspaces.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevFlow.Workspaces.Api.Extensions;
@@ -13,6 +15,8 @@ public static class ServiceCollectionExtensions
             options.UseOracle(connectionString));
 
         services.AddHealthChecks();
+
+        services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
 
         return services;
     }
